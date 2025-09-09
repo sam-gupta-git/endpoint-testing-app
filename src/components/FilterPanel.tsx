@@ -9,7 +9,7 @@ import { X, Plus, Filter } from "lucide-react";
 
 interface FilterPanelProps {
   data: unknown[];
-  onFilterChange: (filteredData: unknown[]) => void;
+  onFilterChange: (filteredData: unknown[], activeFilters?: FilterRule[]) => void;
 }
 
 interface FilterRule {
@@ -113,8 +113,8 @@ export default function FilterPanel({ data, onFilterChange }: FilterPanelProps) 
   // Apply filters whenever filters change
   useEffect(() => {
     const filteredData = applyFilters(data, filters);
-    onFilterChange(filteredData);
-  }, [data, filters, onFilterChange]);
+    onFilterChange(filteredData, filters);
+  }, [data, filters]);
 
   const addFilter = () => {
     const newFilter: FilterRule = {

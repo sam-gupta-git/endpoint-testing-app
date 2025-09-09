@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon } from 
 
 interface ChartViewProps {
   data: unknown[];
+  activeFilters?: unknown[];
 }
 
 interface ChartConfig {
@@ -20,7 +21,7 @@ interface ChartConfig {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
 
-export default function ChartView({ data }: ChartViewProps) {
+export default function ChartView({ data, activeFilters }: ChartViewProps) {
   const [chartConfig, setChartConfig] = useState<ChartConfig>({
     xAxis: '',
     yAxis: '',
@@ -71,6 +72,19 @@ export default function ChartView({ data }: ChartViewProps) {
       });
     }
   }, [stringColumns, numericColumns, chartConfig.xAxis, chartConfig.yAxis]);
+
+  // Auto-adjust y-axis based on first filter
+  useEffect(() => {
+    if (activeFilters && activeFilters.length > 0 && numericColumns.length > 0) {
+      const firstFilter = activeFilters[0] as { column: string };
+      if (firstFilter.column && numericColumns.includes(firstFilter.column)) {
+        setChartConfig(prev => ({
+          ...prev,
+          yAxis: firstFilter.column
+        }));
+      }
+    }
+  }, [activeFilters, numericColumns]);
 
   // Prepare chart data
   const chartData = useMemo(() => {
@@ -155,7 +169,7 @@ export default function ChartView({ data }: ChartViewProps) {
     switch (chartConfig.chartType) {
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={420}>
             <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -185,7 +199,7 @@ export default function ChartView({ data }: ChartViewProps) {
 
       case 'line':
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={420}>
             <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
@@ -221,7 +235,7 @@ export default function ChartView({ data }: ChartViewProps) {
 
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={420}>
             <PieChart>
               <Pie
                 data={chartData}
@@ -361,7 +375,9 @@ export default function ChartView({ data }: ChartViewProps) {
       {/* Chart */}
       <Card>
         <CardContent className="p-6">
-          {renderChart()}
+          <div className="h-[28rem] overflow-hidden">
+            {renderChart()}
+          </div>
         </CardContent>
       </Card>
     </div>

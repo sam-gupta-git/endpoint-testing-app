@@ -10,9 +10,10 @@ import ExportMenu from "./ExportMenu";
 
 interface DataTabsProps {
   data: unknown;
+  activeFilters?: unknown[];
 }
 
-export default function DataTabs({ data }: DataTabsProps) {
+export default function DataTabs({ data, activeFilters }: DataTabsProps) {
   const isArray = Array.isArray(data);
   const hasNumericData = isArray && data.length > 0 && data.some((item: unknown) => 
     typeof item === 'object' && item !== null && 
@@ -84,7 +85,7 @@ export default function DataTabs({ data }: DataTabsProps) {
 
           <TabsContent value="chart" className="mt-4">
             {hasNumericData ? (
-              <ChartView data={data} />
+              <ChartView data={data} activeFilters={activeFilters} />
             ) : (
               <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />

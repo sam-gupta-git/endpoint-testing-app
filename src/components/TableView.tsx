@@ -266,7 +266,7 @@ export default function TableView({ data }: TableViewProps) {
       {/* Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto h-[28rem] overflow-y-auto">
             <table className="w-full">
               <thead className="border-b bg-slate-50 dark:bg-slate-800">
                 <tr>

@@ -22,6 +22,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filteredData, setFilteredData] = useState<unknown>(null);
+  const [activeFilters, setActiveFilters] = useState<unknown[]>([]);
   const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
   const apiInputRef = useRef<ApiInputRef>(null);
 
@@ -81,13 +82,15 @@ export default function Home() {
     setLoading(isLoading);
   };
 
-  const handleFilterChange = (filtered: unknown) => {
+  const handleFilterChange = (filtered: unknown, filters?: unknown[]) => {
     setFilteredData(filtered);
+    setActiveFilters(filters || []);
   };
 
   const handleLogoClick = () => {
     setApiData(null);
     setFilteredData(null);
+    setActiveFilters([]);
     setError(null);
     setLoading(false);
     apiInputRef.current?.clearInput();
@@ -183,7 +186,7 @@ export default function Home() {
           {apiData && (
             <div className="space-y-6">
               {/* Data Visualization */}
-              <DataTabs data={filteredData || apiData} />
+              <DataTabs data={filteredData || apiData} activeFilters={activeFilters} />
 
               {/* Filters - Under the table view */}
               {Array.isArray(apiData) && apiData.length > 0 && (
@@ -260,7 +263,7 @@ export default function Home() {
                         <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
                           {api.description}
                         </p>
-                        <code className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                        <code className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded break-all">
                           {api.url}
                         </code>
                       </CardContent>

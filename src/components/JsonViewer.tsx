@@ -243,7 +243,7 @@ export default function JsonViewer({ data }: JsonViewerProps) {
 
       <Card>
         <CardContent className="p-4">
-          <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 overflow-auto max-h-96">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 overflow-auto h-[28rem]">
             <JsonNode data={data} />
           </div>
         </CardContent>
