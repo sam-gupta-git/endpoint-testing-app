@@ -10,6 +10,7 @@ import ApiInput, { ApiInputRef } from "@/components/ApiInput";
 import DataTabs from "@/components/DataTabs";
 import FilterPanel from "@/components/FilterPanel";
 import ExportMenu from "@/components/ExportMenu";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
   const [apiData, setApiData] = useState<unknown>(null);
@@ -58,6 +59,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <Badge variant="secondary" className="hidden sm:flex">
                 <Globe className="h-3 w-3 mr-1" />
                 Public APIs Only
@@ -93,7 +95,7 @@ export default function Home() {
           {/* Error Display */}
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{String(error)}</AlertDescription>
+              <AlertDescription>{error as string}</AlertDescription>
             </Alert>
           )}
 
