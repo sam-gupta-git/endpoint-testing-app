@@ -9,7 +9,6 @@ import { Globe, Database, Filter } from "lucide-react";
 import ApiInput, { ApiInputRef } from "@/components/ApiInput";
 import DataTabs from "@/components/DataTabs";
 import FilterPanel from "@/components/FilterPanel";
-import ExportMenu from "@/components/ExportMenu";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Home() {
@@ -39,13 +38,24 @@ export default function Home() {
     setFilteredData(filtered);
   };
 
+  const handleLogoClick = () => {
+    setApiData(null);
+    setFilteredData(null);
+    setError(null);
+    setLoading(false);
+    apiInputRef.current?.clearInput();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
       <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <button 
+              onClick={handleLogoClick}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity cursor-pointer"
+            >
               <div className="p-2 bg-blue-600 rounded-lg">
                 <Database className="h-6 w-6 text-white" />
               </div>
@@ -57,7 +67,7 @@ export default function Home() {
                   Fetch, visualize, and export data from any public API
                 </p>
               </div>
-            </div>
+            </button>
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <Badge variant="secondary" className="hidden sm:flex">
@@ -144,19 +154,6 @@ export default function Home() {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Export Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Export Data</CardTitle>
-                  <CardDescription>
-                    Download your data in various formats
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ExportMenu data={filteredData || apiData} />
-                </CardContent>
-              </Card>
             </div>
           )}
 
@@ -196,11 +193,6 @@ export default function Home() {
                       name: "Weather (London)",
                       url: "https://api.openweathermap.org/data/2.5/weather?q=London&appid=demo",
                       description: "Current weather data (demo key)"
-                    },
-                    {
-                      name: "Random Quotes",
-                      url: "https://api.quotable.io/quotes?limit=20",
-                      description: "Inspirational quotes with authors"
                     },
                     {
                       name: "Cryptocurrency Prices",

@@ -16,6 +16,7 @@ interface ApiInputProps {
 
 export interface ApiInputRef {
   setUrl: (url: string) => void;
+  clearInput: () => void;
 }
 
 const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError, onLoading }, ref) => {
@@ -28,6 +29,11 @@ const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError,
     setUrl: (newUrl: string) => {
       setUrl(newUrl);
       validateUrl(newUrl);
+    },
+    clearInput: () => {
+      setUrl("");
+      setValidationStatus('idle');
+      setValidationMessage("");
     }
   }));
 

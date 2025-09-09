@@ -2,11 +2,11 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { FileText, Table, BarChart3 } from "lucide-react";
 import JsonViewer from "./JsonViewer";
 import TableView from "./TableView";
 import ChartView from "./ChartView";
+import ExportMenu from "./ExportMenu";
 
 interface DataTabsProps {
   data: unknown;
@@ -39,9 +39,7 @@ export default function DataTabs({ data }: DataTabsProps) {
               View your data in different formats
             </CardDescription>
           </div>
-          <Badge variant="outline">
-            {Array.isArray(data) ? `${data.length} items` : "Object"}
-          </Badge>
+          <ExportMenu data={data} />
         </div>
       </CardHeader>
       <CardContent>
@@ -58,7 +56,6 @@ export default function DataTabs({ data }: DataTabsProps) {
             >
               <Table className="h-4 w-4" />
               Table
-              {!isArray && <Badge variant="secondary" className="ml-1 text-xs">N/A</Badge>}
             </TabsTrigger>
             <TabsTrigger 
               value="chart" 
@@ -67,7 +64,6 @@ export default function DataTabs({ data }: DataTabsProps) {
             >
               <BarChart3 className="h-4 w-4" />
               Charts
-              {!hasNumericData && <Badge variant="secondary" className="ml-1 text-xs">N/A</Badge>}
             </TabsTrigger>
           </TabsList>
 
