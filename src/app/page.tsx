@@ -11,17 +11,64 @@ import DataTabs from "@/components/DataTabs";
 import FilterPanel from "@/components/FilterPanel";
 import ThemeToggle from "@/components/ThemeToggle";
 
+interface EndpointHistory {
+  url: string;
+  name: string;
+  timestamp: number;
+}
+
 export default function Home() {
   const [apiData, setApiData] = useState<unknown>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filteredData, setFilteredData] = useState<unknown>(null);
+  const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
   const apiInputRef = useRef<ApiInputRef>(null);
 
-  const handleDataFetch = (data: unknown) => {
+  const getEndpointName = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+      const pathname = urlObj.pathname;
+      
+      // Extract meaningful name from URL
+      if (hostname.includes('jsonplaceholder')) {
+        if (pathname.includes('/users')) return 'JSONPlaceholder Users';
+        if (pathname.includes('/posts')) return 'JSONPlaceholder Posts';
+        return 'JSONPlaceholder API';
+      }
+      if (hostname.includes('restcountries')) return 'Countries Data';
+      if (hostname.includes('dog.ceo')) return 'Dog Breeds';
+      if (hostname.includes('openweathermap')) return 'Weather Data';
+      if (hostname.includes('coingecko')) return 'Cryptocurrency Prices';
+      if (hostname.includes('quotable')) return 'Random Quotes';
+      
+      // Fallback to hostname + path
+      return `${hostname}${pathname}`;
+    } catch {
+      return url;
+    }
+  };
+
+  const handleDataFetch = (data: unknown, url: string) => {
     setApiData(data);
     setFilteredData(data);
     setError(null);
+    
+    // Add to history
+    const endpointName = getEndpointName(url);
+    const newHistoryItem: EndpointHistory = {
+      url,
+      name: endpointName,
+      timestamp: Date.now()
+    };
+    
+    setEndpointHistory(prev => {
+      // Remove if already exists to avoid duplicates
+      const filtered = prev.filter(item => item.url !== url);
+      // Add to beginning and limit to 5 items
+      return [newHistoryItem, ...filtered].slice(0, 5);
+    });
   };
 
   const handleError = (errorMessage: string) => {
@@ -99,6 +146,7 @@ export default function Home() {
                 onDataFetch={handleDataFetch}
                 onError={handleError}
                 onLoading={handleLoading}
+                endpointHistory={endpointHistory}
               />
               {apiData && !loading && (
                 <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">

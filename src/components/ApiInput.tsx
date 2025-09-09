@@ -8,10 +8,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ExternalLink, CheckCircle, XCircle } from "lucide-react";
 import { fetchApiData } from "@/lib/actions";
 
+interface EndpointHistory {
+  url: string;
+  name: string;
+  timestamp: number;
+}
+
 interface ApiInputProps {
-  onDataFetch: (data: unknown) => void;
+  onDataFetch: (data: unknown, url: string) => void;
   onError: (error: string) => void;
   onLoading: (loading: boolean) => void;
+  endpointHistory: EndpointHistory[];
 }
 
 export interface ApiInputRef {
@@ -19,7 +26,7 @@ export interface ApiInputRef {
   clearInput: () => void;
 }
 
-const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError, onLoading }, ref) => {
+const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError, onLoading, endpointHistory }, ref) => {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [validationStatus, setValidationStatus] = useState<'idle' | 'valid' | 'invalid'>('idle');
@@ -92,7 +99,7 @@ const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError,
       const result = await fetchApiData(url);
       
       if (result.success) {
-        onDataFetch(result.data);
+        onDataFetch(result.data, url);
         setValidationStatus('valid');
         setValidationMessage("Data fetched successfully!");
       } else {
@@ -121,14 +128,6 @@ const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError,
     setUrl(sampleUrl);
     validateUrl(sampleUrl);
   };
-
-  const sampleApis = [
-    { name: "Users", url: "https://jsonplaceholder.typicode.com/users" },
-    { name: "Posts", url: "https://jsonplaceholder.typicode.com/posts" },
-    { name: "Countries", url: "https://restcountries.com/v3.1/all?fields=name,population,area,continents,capital" },
-    { name: "Dog Breeds", url: "https://dog.ceo/api/breeds/list/all" },
-    { name: "Crypto Prices", url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false" }
-  ];
 
   return (
     <div className="space-y-4">
@@ -189,24 +188,27 @@ const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError,
         )}
       </div>
 
-      {/* Sample APIs */}
-      <div className="space-y-2">
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Try these sample APIs:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {sampleApis.map((api, index) => (
-            <Badge
-              key={index}
-              variant="outline"
-              className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              onClick={() => handleSampleClick(api.url)}
-            >
-              {api.name}
-            </Badge>
-          ))}
+      {/* History Buttons */}
+      {endpointHistory.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            Recent endpoints:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {endpointHistory.map((endpoint, index) => (
+              <Badge
+                key={index}
+                variant="outline"
+                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                onClick={() => handleSampleClick(endpoint.url)}
+                title={endpoint.url}
+              >
+                {endpoint.name}
+              </Badge>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Security Notice */}
       <Alert>
