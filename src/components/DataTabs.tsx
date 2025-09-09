@@ -19,19 +19,33 @@ export default function DataTabs({ data }: DataTabsProps) {
     Object.values(item as Record<string, unknown>).some(value => typeof value === 'number')
   );
 
+  // Determine default tab: charts if visualizable data, otherwise table if array, otherwise json
+  const getDefaultTab = () => {
+    if (hasNumericData) return "chart";
+    if (isArray) return "table";
+    return "json";
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Data Visualization
-        </CardTitle>
-        <CardDescription>
-          View your data in different formats
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Data Visualization
+            </CardTitle>
+            <CardDescription>
+              View your data in different formats
+            </CardDescription>
+          </div>
+          <Badge variant="outline">
+            {Array.isArray(data) ? `${data.length} items` : "Object"}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="json" className="w-full">
+        <Tabs defaultValue={getDefaultTab()} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="json" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />

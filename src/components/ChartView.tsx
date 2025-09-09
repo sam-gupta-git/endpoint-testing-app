@@ -167,6 +167,9 @@ export default function ChartView({ data }: ChartViewProps) {
               />
               <YAxis />
               <Tooltip 
+                contentStyle={{
+                  color: "#000000"
+                }}
                 formatter={(value: unknown) => [String(value), chartConfig.yAxis]}
                 labelFormatter={(label: unknown, payload: unknown) => {
                   if (payload && Array.isArray(payload) && payload[0] && (payload[0] as { payload: { fullLabel: unknown } }).payload.fullLabel) {
@@ -194,6 +197,9 @@ export default function ChartView({ data }: ChartViewProps) {
               />
               <YAxis />
               <Tooltip 
+                contentStyle={{
+                  color: "#000000"
+                }}
                 formatter={(value: unknown) => [String(value), chartConfig.yAxis]}
                 labelFormatter={(label: unknown, payload: unknown) => {
                   if (payload && Array.isArray(payload) && payload[0] && (payload[0] as { payload: { fullLabel: unknown } }).payload.fullLabel) {
@@ -232,6 +238,9 @@ export default function ChartView({ data }: ChartViewProps) {
                 ))}
               </Pie>
               <Tooltip 
+                contentStyle={{
+                  color: "#000000"
+                }}
                 formatter={(value: unknown) => [
                   String(value), 
                   chartConfig.yAxis

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -111,7 +111,7 @@ export default function FilterPanel({ data, onFilterChange }: FilterPanelProps) 
   }
 
   // Apply filters whenever filters change
-  useMemo(() => {
+  useEffect(() => {
     const filteredData = applyFilters(data, filters);
     onFilterChange(filteredData);
   }, [data, filters, onFilterChange]);

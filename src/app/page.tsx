@@ -90,6 +90,14 @@ export default function Home() {
                 onError={handleError}
                 onLoading={handleLoading}
               />
+              {apiData && !loading && (
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Data loaded successfully</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
           {/* Error Display */}
@@ -116,36 +124,19 @@ export default function Home() {
           {/* Data Display Section */}
           {apiData && (
             <div className="space-y-6">
-              {/* Data Info */}
-              <Card>
-                <CardContent className="py-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <Badge variant="outline">
-                        {Array.isArray(apiData) ? `${apiData.length} items` : "Object"}
-                      </Badge>
-                      <span className="text-sm text-slate-600 dark:text-slate-400">
-                        Data loaded successfully
-                      </span>
-                    </div>
-                    <ExportMenu data={filteredData || apiData} />
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Data Visualization */}
+              <DataTabs data={filteredData || apiData} />
 
-              {/* Filters */}
+              {/* Filters - Under the table view */}
               {Array.isArray(apiData) && apiData.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Filter className="h-5 w-5" />
+                <Card className="border-slate-200 dark:border-slate-700">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                      <Filter className="h-4 w-4" />
                       Filters
                     </CardTitle>
-                    <CardDescription>
-                      Filter the data to focus on specific values
-                    </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <FilterPanel
                       data={apiData}
                       onFilterChange={handleFilterChange}
@@ -154,8 +145,18 @@ export default function Home() {
                 </Card>
               )}
 
-              {/* Data Tabs */}
-              <DataTabs data={filteredData || apiData} />
+              {/* Export Section */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Export Data</CardTitle>
+                  <CardDescription>
+                    Download your data in various formats
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExportMenu data={filteredData || apiData} />
+                </CardContent>
+              </Card>
             </div>
           )}
 
