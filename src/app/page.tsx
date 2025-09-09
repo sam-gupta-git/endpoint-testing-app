@@ -1,102 +1,240 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useRef } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Globe, Database, Filter } from "lucide-react";
+import ApiInput, { ApiInputRef } from "@/components/ApiInput";
+import DataTabs from "@/components/DataTabs";
+import FilterPanel from "@/components/FilterPanel";
+import ExportMenu from "@/components/ExportMenu";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [apiData, setApiData] = useState<unknown>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [filteredData, setFilteredData] = useState<unknown>(null);
+  const apiInputRef = useRef<ApiInputRef>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleDataFetch = (data: unknown) => {
+    setApiData(data);
+    setFilteredData(data);
+    setError(null);
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+    setApiData(null);
+    setFilteredData(null);
+  };
+
+  const handleLoading = (isLoading: boolean) => {
+    setLoading(isLoading);
+  };
+
+  const handleFilterChange = (filtered: unknown) => {
+    setFilteredData(filtered);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+      {/* Header */}
+      <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Database className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  API Data Playground
+                </h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Fetch, visualize, and export data from any public API
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Badge variant="secondary" className="hidden sm:flex">
+                <Globe className="h-3 w-3 mr-1" />
+                Public APIs Only
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* API Input Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                API Endpoint
+              </CardTitle>
+              <CardDescription>
+                Enter a public API endpoint to fetch and visualize its data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ApiInput
+                ref={apiInputRef}
+                onDataFetch={handleDataFetch}
+                onError={handleError}
+                onLoading={handleLoading}
+              />
+            </CardContent>
+          </Card>
+          {/* Error Display */}
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{String(error)}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Loading State */}
+          {loading && (
+            <Card>
+              <CardContent className="py-8">
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Fetching data from API...
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Data Display Section */}
+          {apiData && (
+            <div className="space-y-6">
+              {/* Data Info */}
+              <Card>
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <Badge variant="outline">
+                        {Array.isArray(apiData) ? `${apiData.length} items` : "Object"}
+                      </Badge>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        Data loaded successfully
+                      </span>
+                    </div>
+                    <ExportMenu data={filteredData || apiData} />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Filters */}
+              {Array.isArray(apiData) && apiData.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Filter className="h-5 w-5" />
+                      Filters
+                    </CardTitle>
+                    <CardDescription>
+                      Filter the data to focus on specific values
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <FilterPanel
+                      data={apiData}
+                      onFilterChange={handleFilterChange}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Data Tabs */}
+              <DataTabs data={filteredData || apiData} />
+            </div>
+          )}
+
+          {/* Sample APIs */}
+          {!apiData && !loading && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Try These Sample APIs</CardTitle>
+                <CardDescription>
+                  Click on any of these endpoints to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    {
+                      name: "JSONPlaceholder Users",
+                      url: "https://jsonplaceholder.typicode.com/users",
+                      description: "Sample user data with names, emails, and addresses"
+                    },
+                    {
+                      name: "JSONPlaceholder Posts",
+                      url: "https://jsonplaceholder.typicode.com/posts",
+                      description: "Sample blog posts with titles and content"
+                    },
+                    {
+                      name: "Cat Facts",
+                      url: "https://catfact.ninja/facts?limit=20",
+                      description: "Random cat facts with lengths"
+                    },
+                    {
+                      name: "Dog Breeds",
+                      url: "https://dog.ceo/api/breeds/list/all",
+                      description: "List of dog breeds organized by type"
+                    },
+                    {
+                      name: "Weather (London)",
+                      url: "https://api.openweathermap.org/data/2.5/weather?q=London&appid=demo",
+                      description: "Current weather data (demo key)"
+                    },
+                    {
+                      name: "Random Quotes",
+                      url: "https://api.quotable.io/quotes?limit=20",
+                      description: "Inspirational quotes with authors"
+                    }
+                  ].map((api, index) => (
+                    <Card 
+                      key={index} 
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        apiInputRef.current?.setUrl(api.url);
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-sm mb-2">{api.name}</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                          {api.description}
+                        </p>
+                        <code className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                          {api.url}
+                        </code>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
+
+      {/* Footer */}
+      <footer className="border-t bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm mt-16">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center text-sm text-slate-600 dark:text-slate-400">
+            <p>Built with Next.js, Tailwind CSS, and ShadCN UI</p>
+            <p className="mt-1">
+              ⚠️ Only use public APIs. Never send sensitive data or API keys.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
