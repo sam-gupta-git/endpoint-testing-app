@@ -66,9 +66,49 @@ export default function TableView({ data }: TableViewProps) {
       case 'boolean':
         return value ? 'Yes' : 'No';
       case 'array':
-        return `Array(${(value as unknown[]).length})`;
+        const arr = value as unknown[];
+        if (arr.length === 0) return '—';
+        if (arr.length === 1) return String(arr[0]);
+        if (arr.length <= 3) return arr.join(', ');
+        return `${arr.slice(0, 2).join(', ')} (+${arr.length - 2} more)`;
       case 'object':
-        return `Object(${Object.keys(value as Record<string, unknown>).length})`;
+        // Display object contents in a readable format
+        const obj = value as Record<string, unknown>;
+        
+        // Handle specific object types with better formatting
+        if (obj.common && typeof obj.common === 'string') {
+          // Handle name objects like { common: "China", official: "People's Republic of China" }
+          const common = obj.common;
+          const official = obj.official;
+          if (official && typeof official === 'string' && official !== common) {
+            return `${common} (${official.length > 30 ? official.substring(0, 30) + '...' : official})`;
+          }
+          return common;
+        }
+        
+        if (Array.isArray(obj) || (obj.length !== undefined && typeof obj.length === 'number')) {
+          // Handle array-like objects
+          const arr = Array.isArray(obj) ? obj : Object.values(obj);
+          if (arr.length === 0) return '—';
+          if (arr.length === 1) return String(arr[0]);
+          return `${arr.slice(0, 2).join(', ')}${arr.length > 2 ? ` (+${arr.length - 2} more)` : ''}`;
+        }
+        
+        // Handle other objects with key-value pairs
+        const entries = Object.entries(obj).slice(0, 2); // Show first 2 key-value pairs
+        const formatted = entries.map(([key, val]) => {
+          if (typeof val === 'string' && val.length > 15) {
+            return `${key}: "${val.substring(0, 15)}..."`;
+          } else if (Array.isArray(val)) {
+            return `${key}: [${val.length} items]`;
+          } else if (typeof val === 'object' && val !== null) {
+            return `${key}: {...}`;
+          }
+          return `${key}: ${val}`;
+        }).join(', ');
+        
+        const hasMore = Object.keys(obj).length > 2;
+        return hasMore ? `${formatted}...` : formatted;
       default:
         return String(value);
     }

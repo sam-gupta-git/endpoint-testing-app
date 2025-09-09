@@ -45,6 +45,16 @@ export default function ChartView({ data }: ChartViewProps) {
         numeric.push(key);
       } else if (typeof value === 'string' && value.length < 50) {
         string.push(key);
+      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        // Handle nested objects - look for common string properties
+        const obj = value as Record<string, unknown>;
+        if (obj.common && typeof obj.common === 'string') {
+          string.push(`${key}.common`);
+        } else if (obj.name && typeof obj.name === 'string') {
+          string.push(`${key}.name`);
+        } else if (obj.symbol && typeof obj.symbol === 'string') {
+          string.push(`${key}.symbol`);
+        }
       }
     });
 
@@ -69,8 +79,24 @@ export default function ChartView({ data }: ChartViewProps) {
     if (chartConfig.chartType === 'pie') {
       // For pie charts, we need to aggregate data
       const aggregated = data.reduce((acc: Record<string, number>, item: unknown) => {
-        const key = (item as Record<string, unknown>)[chartConfig.xAxis];
-        const value = (item as Record<string, unknown>)[chartConfig.yAxis];
+        const itemObj = item as Record<string, unknown>;
+        
+        // Handle nested object paths
+        const getNestedValue = (path: string) => {
+          const keys = path.split('.');
+          let value: unknown = itemObj;
+          for (const key of keys) {
+            if (value && typeof value === 'object' && value !== null && key in value) {
+              value = (value as Record<string, unknown>)[key];
+            } else {
+              return undefined;
+            }
+          }
+          return value;
+        };
+        
+        const key = getNestedValue(chartConfig.xAxis);
+        const value = getNestedValue(chartConfig.yAxis);
         
         if (key && typeof key === 'string' && typeof value === 'number') {
           acc[key] = (acc[key] || 0) + value;
@@ -86,12 +112,34 @@ export default function ChartView({ data }: ChartViewProps) {
       }));
     } else {
       // For bar and line charts
-      return data.map((item: unknown, index: number) => ({
-        ...(typeof item === 'object' && item !== null ? item : {}),
-        index,
-        [chartConfig.xAxis]: String((item as Record<string, unknown>)[chartConfig.xAxis]).substring(0, 20), // Truncate long labels
-        fullLabel: (item as Record<string, unknown>)[chartConfig.xAxis]
-      }));
+      return data.map((item: unknown, index: number) => {
+        const itemObj = item as Record<string, unknown>;
+        
+        // Handle nested object paths like "name.common"
+        const getNestedValue = (path: string) => {
+          const keys = path.split('.');
+          let value: unknown = itemObj;
+          for (const key of keys) {
+            if (value && typeof value === 'object' && value !== null && key in value) {
+              value = (value as Record<string, unknown>)[key];
+            } else {
+              return undefined;
+            }
+          }
+          return value;
+        };
+        
+        const xValue = getNestedValue(chartConfig.xAxis);
+        const yValue = getNestedValue(chartConfig.yAxis);
+        
+        return {
+          ...itemObj,
+          index,
+          [chartConfig.xAxis]: String(xValue || '').substring(0, 20), // Truncate long labels
+          fullLabel: xValue,
+          [chartConfig.yAxis]: yValue
+        };
+      });
     }
   }, [data, chartConfig]);
 

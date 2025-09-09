@@ -180,9 +180,9 @@ export default function Home() {
                       description: "Sample blog posts with titles and content"
                     },
                     {
-                      name: "Cat Facts",
-                      url: "https://catfact.ninja/facts?limit=20",
-                      description: "Random cat facts with lengths"
+                      name: "Countries Data",
+                      url: "https://restcountries.com/v3.1/all?fields=name,population,area,continents,capital",
+                      description: "Country data with population, area, and continent information"
                     },
                     {
                       name: "Dog Breeds",
@@ -198,6 +198,11 @@ export default function Home() {
                       name: "Random Quotes",
                       url: "https://api.quotable.io/quotes?limit=20",
                       description: "Inspirational quotes with authors"
+                    },
+                    {
+                      name: "Cryptocurrency Prices",
+                      url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false",
+                      description: "Top 20 cryptocurrencies with prices, market cap, and volume data"
                     }
                   ].map((api, index) => (
                     <Card 

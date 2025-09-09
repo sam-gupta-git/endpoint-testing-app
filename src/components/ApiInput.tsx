@@ -119,8 +119,9 @@ const ApiInput = forwardRef<ApiInputRef, ApiInputProps>(({ onDataFetch, onError,
   const sampleApis = [
     { name: "Users", url: "https://jsonplaceholder.typicode.com/users" },
     { name: "Posts", url: "https://jsonplaceholder.typicode.com/posts" },
-    { name: "Cat Facts", url: "https://catfact.ninja/facts?limit=10" },
-    { name: "Dog Breeds", url: "https://dog.ceo/api/breeds/list/all" }
+    { name: "Countries", url: "https://restcountries.com/v3.1/all?fields=name,population,area,continents,capital" },
+    { name: "Dog Breeds", url: "https://dog.ceo/api/breeds/list/all" },
+    { name: "Crypto Prices", url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false" }
   ];
 
   return (
