@@ -114,7 +114,7 @@ export default function FilterPanel({ data, onFilterChange }: FilterPanelProps) 
   useEffect(() => {
     const filteredData = applyFilters(data, filters);
     onFilterChange(filteredData, filters);
-  }, [data, filters]);
+  }, [data, filters, onFilterChange]);
 
   const addFilter = () => {
     const newFilter: FilterRule = {

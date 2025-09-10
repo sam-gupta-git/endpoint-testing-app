@@ -167,7 +167,7 @@ export default function Home() {
                 onLoading={handleLoading}
                 endpointHistory={endpointHistory}
               />
-              {apiData && !loading && (
+              {apiData != null && !loading && (
                 <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
                   <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -199,7 +199,7 @@ export default function Home() {
           )}
 
           {/* Data Display Section */}
-          {apiData && (
+          {apiData != null && (
             <div className="space-y-6">
               {/* Data Visualization */}
               <DataTabs data={filteredData || apiData} activeFilters={activeFilters} />
@@ -225,7 +225,7 @@ export default function Home() {
           )}
 
           {/* Sample APIs and API Browser - Side by Side */}
-          {!apiData && !loading && (
+          {apiData == null && !loading && (
             <div id="api-browser-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Sample APIs */}
               <Card>
