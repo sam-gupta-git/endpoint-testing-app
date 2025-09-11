@@ -6,14 +6,14 @@ import { FileText, Table, BarChart3 } from "lucide-react";
 import JsonViewer from "./JsonViewer";
 import TableView from "./TableView";
 import ChartView from "./ChartView";
-import ExportMenu from "./ExportMenu";
 
 interface DataTabsProps {
   data: unknown;
   activeFilters?: unknown[];
+  isSqlQueryResult?: boolean;
 }
 
-export default function DataTabs({ data, activeFilters }: DataTabsProps) {
+export default function DataTabs({ data, activeFilters, isSqlQueryResult = false }: DataTabsProps) {
   const isArray = Array.isArray(data);
   const hasNumericData = isArray && data.length > 0 && data.some((item: unknown) => 
     typeof item === 'object' && item !== null && 
@@ -38,9 +38,13 @@ export default function DataTabs({ data, activeFilters }: DataTabsProps) {
             </CardTitle>
             <CardDescription>
               View your data in different formats
+              {isSqlQueryResult && (
+                <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  SQL Query Results
+                </span>
+              )}
             </CardDescription>
           </div>
-          <ExportMenu data={data} />
         </div>
       </CardHeader>
       <CardContent>

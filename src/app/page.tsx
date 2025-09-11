@@ -25,6 +25,7 @@ export default function Home() {
   const [filteredData, setFilteredData] = useState<unknown>(null);
   const [activeFilters, setActiveFilters] = useState<unknown[]>([]);
   const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
+  const [isSqlQueryResult, setIsSqlQueryResult] = useState(false);
   const apiInputRef = useRef<ApiInputRef>(null);
 
   const getEndpointName = (url: string): string => {
@@ -55,6 +56,7 @@ export default function Home() {
   const handleDataFetch = (data: unknown, url: string) => {
     setApiData(data);
     setFilteredData(data);
+    setIsSqlQueryResult(false);
     setError(null);
     
     // Add to history
@@ -86,16 +88,22 @@ export default function Home() {
   const handleFilterChange = (filtered: unknown, filters?: unknown[]) => {
     setFilteredData(filtered);
     setActiveFilters(filters || []);
+    setIsSqlQueryResult(false); // Clear SQL query indicator when using filters
   };
 
   const handleSqlQueryResult = (result: unknown) => {
+    console.log('🟢 SQL query result received in parent:', result);
+    console.log('🟢 Setting filteredData and isSqlQueryResult=true');
     setFilteredData(result);
+    setIsSqlQueryResult(true);
+    console.log('🟢 State updated');
   };
 
   const handleLogoClick = () => {
     setApiData(null);
     setFilteredData(null);
     setActiveFilters([]);
+    setIsSqlQueryResult(false);
     setError(null);
     setLoading(false);
     apiInputRef.current?.clearInput();
@@ -209,7 +217,8 @@ export default function Home() {
               {/* Data Visualization */}
               <DataTabs 
                 data={filteredData || apiData} 
-                activeFilters={activeFilters} 
+                activeFilters={activeFilters}
+                isSqlQueryResult={isSqlQueryResult}
               />
 
               {/* SQL Query Panel */}

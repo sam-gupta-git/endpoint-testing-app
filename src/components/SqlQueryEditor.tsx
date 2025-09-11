@@ -24,6 +24,7 @@ interface TableInfo {
   name: string;
   columns: ColumnInfo[];
   sampleData: unknown[];
+  fullData: unknown[];
 }
 
 const SAMPLE_QUERIES = {
@@ -137,7 +138,8 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
     return {
       name: 'data',
       columns,
-      sampleData: data.slice(0, 3) // First 3 items as sample
+      sampleData: data.slice(0, 3), // First 3 items for UI display
+      fullData: data // Full dataset for querying
     };
   }, [data]);
 
@@ -169,7 +171,7 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
       throw new Error("Only SELECT queries are supported");
     }
 
-    let result = [...tableInfo.sampleData];
+    let result = [...tableInfo.fullData];
 
     // Parse WHERE clause
     const whereMatch = sql.match(/WHERE\s+(.+?)(?:\s+ORDER\s+BY|\s+GROUP\s+BY|\s+LIMIT|$)/i);
@@ -276,18 +278,29 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
   };
 
   const handleExecuteQuery = async () => {
-    if (!query.trim()) return;
+    console.log('🔴 Execute Query clicked!', { query, queryTrimmed: query.trim() });
+    
+    if (!query.trim()) {
+      console.log('🔴 No query text, returning early');
+      return;
+    }
 
+    console.log('🔴 Starting execution...');
     setIsExecuting(true);
     setError(null);
 
     try {
       const result = executeQuery(query);
+      console.log('🔴 Query result:', result);
+      console.log('🔴 Calling onQueryResult...');
       onQueryResult(result);
+      console.log('🔴 onQueryResult called successfully');
     } catch (err) {
+      console.error('🔴 Query execution failed:', err);
       setError(err instanceof Error ? err.message : "Query execution failed");
     } finally {
       setIsExecuting(false);
+      console.log('🔴 Execution finished');
     }
   };
 
@@ -350,11 +363,25 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
           <div className="text-center text-slate-500 dark:text-slate-400">
             <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>SQL queries are only available for array data</p>
+            <p className="text-xs mt-2">
+              Data type: {Array.isArray(data) ? `Array (${data.length} items)` : typeof data}
+              {Array.isArray(data) && data.length > 0 && (
+                <span> | First item type: {typeof data[0]}</span>
+              )}
+            </p>
           </div>
         </CardContent>
       </Card>
     );
   }
+
+  console.log('🔵 SqlQueryEditor render:', { 
+    hasTableInfo: !!tableInfo, 
+    query: query, 
+    queryTrimmed: query.trim(), 
+    isExecuting, 
+    buttonDisabled: !query.trim() || isExecuting 
+  });
 
   return (
     <div className="space-y-4">
@@ -528,15 +555,25 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
             </Alert>
           )}
 
+          {!query.trim() && (
+            <div className="text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-lg">
+              💡 <strong>Tip:</strong> Enter a SQL query above or click on one of the sample queries to get started.
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-600 dark:text-slate-400">
               <p>Available columns: {tableInfo.columns.map(c => c.name).join(', ')}</p>
               <p>Data type: {tableInfo.columns.map(c => `${c.name} (${c.type})`).join(', ')}</p>
             </div>
             <Button
-              onClick={handleExecuteQuery}
+              onClick={(e) => {
+                console.log('🟡 Button onClick event triggered!', e);
+                handleExecuteQuery();
+              }}
               disabled={!query.trim() || isExecuting}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${!query.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title={!query.trim() ? "Enter a SQL query to enable execution" : isExecuting ? "Query is executing..." : "Execute SQL query"}
             >
               {isExecuting ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
