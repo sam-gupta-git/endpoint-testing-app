@@ -9,6 +9,7 @@ import { Globe, Database, Filter } from "lucide-react";
 import ApiInput, { ApiInputRef } from "@/components/ApiInput";
 import DataTabs from "@/components/DataTabs";
 import FilterPanel from "@/components/FilterPanel";
+import SqlQueryPanel from "@/components/SqlQueryPanel";
 import ThemeToggle from "@/components/ThemeToggle";
 
 interface EndpointHistory {
@@ -24,6 +25,7 @@ export default function Home() {
   const [filteredData, setFilteredData] = useState<unknown>(null);
   const [activeFilters, setActiveFilters] = useState<unknown[]>([]);
   const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
+  const [sqlQueryResult, setSqlQueryResult] = useState<unknown>(null);
   const apiInputRef = useRef<ApiInputRef>(null);
 
   const getEndpointName = (url: string): string => {
@@ -54,6 +56,7 @@ export default function Home() {
   const handleDataFetch = (data: unknown, url: string) => {
     setApiData(data);
     setFilteredData(data);
+    setSqlQueryResult(null);
     setError(null);
     
     // Add to history
@@ -76,6 +79,7 @@ export default function Home() {
     setError(errorMessage);
     setApiData(null);
     setFilteredData(null);
+    setSqlQueryResult(null);
   };
 
   const handleLoading = (isLoading: boolean) => {
@@ -87,10 +91,16 @@ export default function Home() {
     setActiveFilters(filters || []);
   };
 
+  const handleSqlQueryResult = (result: unknown) => {
+    setSqlQueryResult(result);
+    setFilteredData(result);
+  };
+
   const handleLogoClick = () => {
     setApiData(null);
     setFilteredData(null);
     setActiveFilters([]);
+    setSqlQueryResult(null);
     setError(null);
     setLoading(false);
     apiInputRef.current?.clearInput();
@@ -202,7 +212,16 @@ export default function Home() {
           {apiData != null && (
             <div className="space-y-6">
               {/* Data Visualization */}
-              <DataTabs data={filteredData || apiData} activeFilters={activeFilters} />
+              <DataTabs 
+                data={filteredData || apiData} 
+                activeFilters={activeFilters} 
+              />
+
+              {/* SQL Query Panel */}
+              <SqlQueryPanel 
+                data={apiData} 
+                onQueryResult={handleSqlQueryResult}
+              />
 
               {/* Filters - Under the table view */}
               {Array.isArray(apiData) && apiData.length > 0 && (
