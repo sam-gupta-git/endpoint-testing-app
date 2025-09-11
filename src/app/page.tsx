@@ -25,7 +25,6 @@ export default function Home() {
   const [filteredData, setFilteredData] = useState<unknown>(null);
   const [activeFilters, setActiveFilters] = useState<unknown[]>([]);
   const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
-  const [sqlQueryResult, setSqlQueryResult] = useState<unknown>(null);
   const apiInputRef = useRef<ApiInputRef>(null);
 
   const getEndpointName = (url: string): string => {
@@ -56,7 +55,6 @@ export default function Home() {
   const handleDataFetch = (data: unknown, url: string) => {
     setApiData(data);
     setFilteredData(data);
-    setSqlQueryResult(null);
     setError(null);
     
     // Add to history
@@ -79,7 +77,6 @@ export default function Home() {
     setError(errorMessage);
     setApiData(null);
     setFilteredData(null);
-    setSqlQueryResult(null);
   };
 
   const handleLoading = (isLoading: boolean) => {
@@ -92,7 +89,6 @@ export default function Home() {
   };
 
   const handleSqlQueryResult = (result: unknown) => {
-    setSqlQueryResult(result);
     setFilteredData(result);
   };
 
@@ -100,7 +96,6 @@ export default function Home() {
     setApiData(null);
     setFilteredData(null);
     setActiveFilters([]);
-    setSqlQueryResult(null);
     setError(null);
     setLoading(false);
     apiInputRef.current?.clearInput();

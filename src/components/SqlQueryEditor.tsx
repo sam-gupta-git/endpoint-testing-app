@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -186,9 +186,31 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
       result.sort((a, b) => {
         const aVal = (a as Record<string, unknown>)[column];
         const bVal = (b as Record<string, unknown>)[column];
-        if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-        if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-        return 0;
+        
+        // Handle null/undefined values
+        if (aVal == null && bVal == null) return 0;
+        if (aVal == null) return direction === 'asc' ? -1 : 1;
+        if (bVal == null) return direction === 'asc' ? 1 : -1;
+        
+        // Type-safe comparison
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return direction === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+        
+        if (typeof aVal === 'string' && typeof bVal === 'string') {
+          return direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        }
+        
+        if (typeof aVal === 'boolean' && typeof bVal === 'boolean') {
+          const aNum = aVal ? 1 : 0;
+          const bNum = bVal ? 1 : 0;
+          return direction === 'asc' ? aNum - bNum : bNum - aNum;
+        }
+        
+        // Fallback to string comparison
+        const aStr = String(aVal);
+        const bStr = String(bVal);
+        return direction === 'asc' ? aStr.localeCompare(bStr) : bStr.localeCompare(aStr);
       });
     }
 
