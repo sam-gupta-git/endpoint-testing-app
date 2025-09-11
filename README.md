@@ -2,6 +2,8 @@
 
 A modern web application for fetching, visualizing, and exporting data from any public API endpoint. Built with Next.js, TypeScript, and Tailwind CSS.
 
+https://dataplayground.vercel.app/
+
 ![API Data Playground](https://img.shields.io/badge/Next.js-15.5.2-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
@@ -156,20 +158,6 @@ src/
     ├── sample-data.ts    # Sample data for testing
     └── utils.ts          # Helper utilities
 ```
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Deploy with zero configuration
-
-### Other Platforms
-The app can be deployed to any platform that supports Next.js:
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
 
 ## 🔒 Security Considerations
 
