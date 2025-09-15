@@ -6,7 +6,7 @@ import SqlQueryEditor from "./SqlQueryEditor";
 
 interface SqlQueryPanelProps {
   data: unknown;
-  onQueryResult: (result: unknown) => void;
+  onQueryResult: (result: unknown, query: string) => void;
 }
 
 export default function SqlQueryPanel({ data, onQueryResult }: SqlQueryPanelProps) {

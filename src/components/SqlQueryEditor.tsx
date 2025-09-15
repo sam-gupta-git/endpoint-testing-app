@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface SqlQueryEditorProps {
   data: unknown;
-  onQueryResult: (result: unknown) => void;
+  onQueryResult: (result: unknown, query: string) => void;
 }
 
 interface ColumnInfo {
@@ -99,6 +99,58 @@ const SAMPLE_QUERIES = {
       name: "Price changes",
       query: "SELECT name, price_change_percentage_24h FROM crypto WHERE price_change_percentage_24h > 0"
     }
+  ],
+  spacex: [
+    {
+      name: "All launches",
+      query: "SELECT * FROM data"
+    },
+    {
+      name: "Successful launches only",
+      query: "SELECT mission_name, launch_date_utc, launch_success FROM data WHERE launch_success = true"
+    },
+    {
+      name: "Recent launches",
+      query: "SELECT mission_name, launch_date_utc, launch_success FROM data ORDER BY launch_date_utc DESC LIMIT 10"
+    },
+    {
+      name: "Launch success rate by year",
+      query: "SELECT YEAR(launch_date_utc) as year, COUNT(*) as total_launches, SUM(launch_success) as successful_launches FROM data GROUP BY YEAR(launch_date_utc)"
+    },
+    {
+      name: "Falcon Heavy launches",
+      query: "SELECT mission_name, launch_date_utc, rocket_name FROM data WHERE rocket_name LIKE '%Falcon Heavy%'"
+    },
+    {
+      name: "Failed launches with details",
+      query: "SELECT mission_name, launch_date_utc, details FROM data WHERE launch_success = false AND details IS NOT NULL"
+    }
+  ],
+  pokemon: [
+    {
+      name: "All Pokemon",
+      query: "SELECT * FROM data"
+    },
+    {
+      name: "Top Pokemon by stats",
+      query: "SELECT name, base_experience, height, weight FROM data ORDER BY base_experience DESC LIMIT 10"
+    },
+    {
+      name: "Fire type Pokemon",
+      query: "SELECT name, types FROM data WHERE types LIKE '%fire%'"
+    },
+    {
+      name: "Heavy Pokemon",
+      query: "SELECT name, weight FROM data WHERE weight > 100 ORDER BY weight DESC"
+    },
+    {
+      name: "Pokemon with high HP",
+      query: "SELECT name, stats_hp FROM data WHERE stats_hp > 100 ORDER BY stats_hp DESC"
+    },
+    {
+      name: "Pokemon abilities",
+      query: "SELECT name, abilities FROM data WHERE abilities IS NOT NULL"
+    }
   ]
 };
 
@@ -119,6 +171,32 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
   const [selectedColumn, setSelectedColumn] = useState<string>("");
   const [selectedOperation, setSelectedOperation] = useState<string>("");
 
+  // Flatten nested objects for better SQL querying
+  const flattenObject = useCallback((obj: Record<string, unknown>, prefix = ''): Record<string, unknown> => {
+    const flattened: Record<string, unknown> = {};
+    
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const newKey = prefix ? `${prefix}_${key}` : key;
+        const value = obj[key];
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Recursively flatten nested objects
+          Object.assign(flattened, flattenObject(value as Record<string, unknown>, newKey));
+        } else if (Array.isArray(value)) {
+          // Handle arrays - convert to comma-separated string for SQL queries
+          flattened[newKey] = value.map(item => 
+            typeof item === 'object' ? JSON.stringify(item) : String(item)
+          ).join(', ');
+        } else {
+          flattened[newKey] = value;
+        }
+      }
+    }
+    
+    return flattened;
+  }, []);
+
   // Analyze data structure to create table info
   const tableInfo = useMemo((): TableInfo | null => {
     if (!Array.isArray(data) || data.length === 0) return null;
@@ -126,7 +204,11 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
     const sampleItem = data[0];
     if (typeof sampleItem !== 'object' || sampleItem === null) return null;
 
-    const columns: ColumnInfo[] = Object.entries(sampleItem).map(([key, value]) => ({
+    // Flatten the data for better SQL querying
+    const flattenedData = data.map(item => flattenObject(item));
+    const flattenedSample = flattenedData[0];
+
+    const columns: ColumnInfo[] = Object.entries(flattenedSample).map(([key, value]) => ({
       name: key,
       type: Array.isArray(value) ? 'array' : 
             value === null ? 'string' :
@@ -138,10 +220,10 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
     return {
       name: 'data',
       columns,
-      sampleData: data.slice(0, 3), // First 3 items for UI display
-      fullData: data // Full dataset for querying
+      sampleData: flattenedData.slice(0, 3), // First 3 items for UI display
+      fullData: flattenedData // Full dataset for querying
     };
-  }, [data]);
+  }, [data, flattenObject]);
 
   // Get sample queries based on data type
   const getSampleQueries = () => {
@@ -150,6 +232,8 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
     const firstItem = tableInfo.sampleData[0] as Record<string, unknown>;
     
     // Determine data type based on common field names
+    if (firstItem.mission_name && firstItem.launch_date_utc) return SAMPLE_QUERIES.spacex;
+    if (firstItem.name && firstItem.types && firstItem.base_experience) return SAMPLE_QUERIES.pokemon;
     if (firstItem.name && firstItem.email) return SAMPLE_QUERIES.users;
     if (firstItem.title && firstItem.body) return SAMPLE_QUERIES.posts;
     if (firstItem.name && firstItem.population) return SAMPLE_QUERIES.countries;
@@ -278,29 +362,18 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
   };
 
   const handleExecuteQuery = async () => {
-    console.log('🔴 Execute Query clicked!', { query, queryTrimmed: query.trim() });
-    
-    if (!query.trim()) {
-      console.log('🔴 No query text, returning early');
-      return;
-    }
+    if (!query.trim()) return;
 
-    console.log('🔴 Starting execution...');
     setIsExecuting(true);
     setError(null);
 
     try {
       const result = executeQuery(query);
-      console.log('🔴 Query result:', result);
-      console.log('🔴 Calling onQueryResult...');
-      onQueryResult(result);
-      console.log('🔴 onQueryResult called successfully');
+      onQueryResult(result, query);
     } catch (err) {
-      console.error('🔴 Query execution failed:', err);
       setError(err instanceof Error ? err.message : "Query execution failed");
     } finally {
       setIsExecuting(false);
-      console.log('🔴 Execution finished');
     }
   };
 
@@ -312,7 +385,7 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
   const handleReset = () => {
     setQuery("");
     setError(null);
-    onQueryResult(data);
+    onQueryResult(data, "");
   };
 
   const handleCopyQuery = async () => {
@@ -374,14 +447,6 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
       </Card>
     );
   }
-
-  console.log('🔵 SqlQueryEditor render:', { 
-    hasTableInfo: !!tableInfo, 
-    query: query, 
-    queryTrimmed: query.trim(), 
-    isExecuting, 
-    buttonDisabled: !query.trim() || isExecuting 
-  });
 
   return (
     <div className="space-y-4">
@@ -477,17 +542,17 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 gap-2">
             {sampleQueries.map((sample, index) => (
               <Button
                 key={index}
                 variant="ghost"
-                className="h-auto p-3 justify-start text-left"
+                className="h-auto p-4 justify-start text-left w-full"
                 onClick={() => handleSampleQuery(sample.query)}
               >
-                <div>
-                  <div className="font-medium text-sm">{sample.name}</div>
-                  <code className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
+                <div className="w-full">
+                  <div className="font-medium text-sm mb-2">{sample.name}</div>
+                  <code className="text-xs text-slate-500 dark:text-slate-400 block break-all whitespace-normal">
                     {sample.query}
                   </code>
                 </div>
@@ -567,10 +632,7 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
               <p>Data type: {tableInfo.columns.map(c => `${c.name} (${c.type})`).join(', ')}</p>
             </div>
             <Button
-              onClick={(e) => {
-                console.log('🟡 Button onClick event triggered!', e);
-                handleExecuteQuery();
-              }}
+              onClick={handleExecuteQuery}
               disabled={!query.trim() || isExecuting}
               className={`flex items-center gap-2 ${!query.trim() ? 'opacity-50 cursor-not-allowed' : ''}`}
               title={!query.trim() ? "Enter a SQL query to enable execution" : isExecuting ? "Query is executing..." : "Execute SQL query"}

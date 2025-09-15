@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Globe, Database, Filter } from "lucide-react";
@@ -10,6 +9,7 @@ import ApiInput, { ApiInputRef } from "@/components/ApiInput";
 import DataTabs from "@/components/DataTabs";
 import FilterPanel from "@/components/FilterPanel";
 import SqlQueryPanel from "@/components/SqlQueryPanel";
+import SqlQueryResultsPanel from "@/components/SqlQueryResultsPanel";
 import ThemeToggle from "@/components/ThemeToggle";
 
 interface EndpointHistory {
@@ -26,6 +26,8 @@ export default function Home() {
   const [activeFilters, setActiveFilters] = useState<unknown[]>([]);
   const [endpointHistory, setEndpointHistory] = useState<EndpointHistory[]>([]);
   const [isSqlQueryResult, setIsSqlQueryResult] = useState(false);
+  const [sqlQueryResults, setSqlQueryResults] = useState<unknown>(null);
+  const [currentSqlQuery, setCurrentSqlQuery] = useState<string>("");
   const apiInputRef = useRef<ApiInputRef>(null);
 
   const getEndpointName = (url: string): string => {
@@ -57,6 +59,8 @@ export default function Home() {
     setApiData(data);
     setFilteredData(data);
     setIsSqlQueryResult(false);
+    setSqlQueryResults(null);
+    setCurrentSqlQuery("");
     setError(null);
     
     // Add to history
@@ -91,12 +95,11 @@ export default function Home() {
     setIsSqlQueryResult(false); // Clear SQL query indicator when using filters
   };
 
-  const handleSqlQueryResult = (result: unknown) => {
-    console.log('🟢 SQL query result received in parent:', result);
-    console.log('🟢 Setting filteredData and isSqlQueryResult=true');
+  const handleSqlQueryResult = (result: unknown, query: string) => {
     setFilteredData(result);
     setIsSqlQueryResult(true);
-    console.log('🟢 State updated');
+    setSqlQueryResults(result);
+    setCurrentSqlQuery(query);
   };
 
   const handleLogoClick = () => {
@@ -104,17 +107,13 @@ export default function Home() {
     setFilteredData(null);
     setActiveFilters([]);
     setIsSqlQueryResult(false);
+    setSqlQueryResults(null);
+    setCurrentSqlQuery("");
     setError(null);
     setLoading(false);
     apiInputRef.current?.clearInput();
   };
 
-  const scrollToApiBrowser = () => {
-    const element = document.getElementById('api-browser-section');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
@@ -139,15 +138,6 @@ export default function Home() {
               </div>
             </button>
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={scrollToApiBrowser}
-                className="hidden sm:flex items-center gap-2"
-              >
-                <Globe className="h-4 w-4" />
-                Browse APIs
-              </Button>
               <ThemeToggle />
               <Badge variant="secondary" className="hidden sm:flex">
                 <Globe className="h-3 w-3 mr-1" />
@@ -227,6 +217,13 @@ export default function Home() {
                 onQueryResult={handleSqlQueryResult}
               />
 
+              {/* SQL Query Results Panel */}
+              <SqlQueryResultsPanel 
+                data={sqlQueryResults} 
+                query={currentSqlQuery}
+                isVisible={!!sqlQueryResults}
+              />
+
               {/* Filters - Under the table view */}
               {Array.isArray(apiData) && apiData.length > 0 && (
                 <Card className="border-slate-200 dark:border-slate-700">
@@ -247,105 +244,80 @@ export default function Home() {
             </div>
           )}
 
-          {/* Sample APIs and API Browser - Side by Side */}
+          {/* Sample APIs */}
           {apiData == null && !loading && (
-            <div id="api-browser-section" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Sample APIs */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Try These Sample APIs</CardTitle>
-                  <CardDescription>
-                    Click on any of these endpoints to get started
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {[
-                      {
-                        name: "Countries Data",
-                        url: "https://restcountries.com/v3.1/all?fields=name,population,area,continents,capital",
-                        description: "Country data with population, area, and continent information"
-                      },
-                      {
-                        name: "Cryptocurrency Prices",
-                        url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false",
-                        description: "Top 20 cryptocurrencies with prices, market cap, and volume data"
-                      },
-                      {
-                        name: "Dog Breeds",
-                        url: "https://dog.ceo/api/breeds/list/all",
-                        description: "List of dog breeds organized by type"
-                      },
-                      {
-                        name: "JSONPlaceholder Users",
-                        url: "https://jsonplaceholder.typicode.com/users",
-                        description: "Sample user data with names, emails, and addresses"
-                      },
-                      {
-                        name: "JSONPlaceholder Posts",
-                        url: "https://jsonplaceholder.typicode.com/posts",
-                        description: "Sample blog posts with titles and content"
-                      },
-                      {
-                        name: "Weather (London)",
-                        url: "https://api.openweathermap.org/data/2.5/weather?q=London&appid=demo",
-                        description: "Current weather data (demo key)"
-                      }
-                    ].map((api, index) => (
-                      <Card 
-                        key={index} 
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => {
-                          apiInputRef.current?.setUrl(api.url);
-                        }}
-                      >
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-sm mb-2">{api.name}</h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
-                            {api.description}
-                          </p>
-                          <code className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded break-all">
-                            {api.url}
-                          </code>
-                        </CardContent>
-                      </Card>
-                    ))}
+            <Card>
+              <CardHeader>
+                <CardTitle>Try These Sample APIs</CardTitle>
+                <CardDescription>
+                  Click on any of these endpoints to get started
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[
+                    {
+                      name: "Countries Data",
+                      url: "https://restcountries.com/v3.1/all?fields=name,population,area,continents,capital",
+                      description: "Country data with population, area, and continent information"
+                    },
+                    {
+                      name: "Cryptocurrency Prices",
+                      url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false",
+                      description: "Top 20 cryptocurrencies with prices, market cap, and volume data"
+                    },
+                    {
+                      name: "Dog Breeds",
+                      url: "https://dog.ceo/api/breeds/list/all",
+                      description: "List of dog breeds organized by type"
+                    },
+                    {
+                      name: "Pokemon Data",
+                      url: "https://pokeapi.co/api/v2/pokemon?limit=50",
+                      description: "Pokemon with stats, types, abilities, and visual data"
+                    },
+                    {
+                      name: "Space Missions",
+                      url: "https://api.spacexdata.com/v3/launches",
+                      description: "SpaceX launch data with dates, success rates, and mission details"
+                    },
+                    {
+                      name: "Random Jokes",
+                      url: "https://official-joke-api.appspot.com/random_joke",
+                      description: "Random programming jokes and puns"
+                    }
+                  ].map((api, index) => (
+                    <Card 
+                      key={index} 
+                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      onClick={() => {
+                        apiInputRef.current?.setUrl(api.url);
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-sm mb-2">{api.name}</h3>
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                          {api.description}
+                        </p>
+                        <code className="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded break-all">
+                          {api.url}
+                        </code>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+                
+                {/* More APIs Coming Soon */}
+                <div className="mt-8 text-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                    <Globe className="h-4 w-4 text-slate-500" />
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      More APIs to be added soon
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* API Endpoint Browser - Placeholder */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Globe className="h-5 w-5" />
-                    Public API Browser
-                  </CardTitle>
-                  <CardDescription>
-                    Discover and explore public APIs from various categories
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                    <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-lg inline-block mb-4">
-                      <Globe className="h-12 w-12 mx-auto opacity-50" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">API Browser Coming Soon</h3>
-                    <p className="text-sm mb-4">
-                      Browse and discover public APIs by category, popularity, and features.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-2 text-xs">
-                      <Badge variant="outline">REST APIs</Badge>
-                      <Badge variant="outline">GraphQL</Badge>
-                      <Badge variant="outline">Real-time</Badge>
-                      <Badge variant="outline">Authentication</Badge>
-                      <Badge variant="outline">Rate Limits</Badge>
-                      <Badge variant="outline">Documentation</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       </main>
