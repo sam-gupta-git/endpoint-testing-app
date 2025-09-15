@@ -78,10 +78,6 @@ const SAMPLE_QUERIES = {
       query: "SELECT name_common, area FROM data ORDER BY area DESC LIMIT 10"
     },
     {
-      name: "Countries by continent",
-      query: "SELECT continents, COUNT(*) as count FROM data GROUP BY continents"
-    },
-    {
       name: "Most populous countries",
       query: "SELECT name_common, population FROM data ORDER BY population DESC LIMIT 20"
     },
@@ -96,6 +92,22 @@ const SAMPLE_QUERIES = {
     {
       name: "Countries by capital city",
       query: "SELECT name_common, capital FROM data WHERE capital IS NOT NULL ORDER BY name_common"
+    },
+    {
+      name: "Countries in Asia",
+      query: "SELECT name_common, population, area FROM data WHERE continents LIKE '%Asia%' ORDER BY population DESC"
+    },
+    {
+      name: "Smallest countries by area",
+      query: "SELECT name_common, area FROM data WHERE area IS NOT NULL ORDER BY area ASC LIMIT 10"
+    },
+    {
+      name: "Countries with multiple capitals",
+      query: "SELECT name_common, capital FROM data WHERE capital LIKE '%,%'"
+    },
+    {
+      name: "Countries by official name",
+      query: "SELECT name_common, name_official FROM data ORDER BY name_common"
     }
   ],
   crypto: [
@@ -248,7 +260,7 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
     if (firstItem.name && firstItem.types && firstItem.base_experience) return SAMPLE_QUERIES.pokemon;
     if (firstItem.name && firstItem.email) return SAMPLE_QUERIES.users;
     if (firstItem.title && firstItem.body) return SAMPLE_QUERIES.posts;
-    if (firstItem.name && firstItem.population) return SAMPLE_QUERIES.countries;
+    if (firstItem.name_common && firstItem.population && firstItem.area) return SAMPLE_QUERIES.countries;
     if (firstItem.name && firstItem.current_price) return SAMPLE_QUERIES.crypto;
     
     return SAMPLE_QUERIES.users; // Default fallback
@@ -554,22 +566,24 @@ export default function SqlQueryEditor({ data, onQueryResult }: SqlQueryEditorPr
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-2">
-            {sampleQueries.map((sample, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                className="h-auto p-4 justify-start text-left w-full"
-                onClick={() => handleSampleQuery(sample.query)}
-              >
-                <div className="w-full">
-                  <div className="font-medium text-sm mb-2">{sample.name}</div>
-                  <code className="text-xs text-slate-500 dark:text-slate-400 block break-all whitespace-normal">
-                    {sample.query}
-                  </code>
-                </div>
-              </Button>
-            ))}
+          <div className="max-h-80 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
+            <div className="grid grid-cols-1 gap-2">
+              {sampleQueries.map((sample, index) => (
+                <Button
+                  key={index}
+                  variant="ghost"
+                  className="h-auto p-4 justify-start text-left w-full"
+                  onClick={() => handleSampleQuery(sample.query)}
+                >
+                  <div className="w-full">
+                    <div className="font-medium text-sm mb-2">{sample.name}</div>
+                    <code className="text-xs text-slate-500 dark:text-slate-400 block break-all whitespace-normal">
+                      {sample.query}
+                    </code>
+                  </div>
+                </Button>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
