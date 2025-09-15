@@ -71,19 +71,31 @@ const SAMPLE_QUERIES = {
   countries: [
     {
       name: "Select all countries",
-      query: "SELECT * FROM countries"
+      query: "SELECT * FROM data"
     },
     {
       name: "Largest countries by area",
-      query: "SELECT name, area FROM countries ORDER BY area DESC LIMIT 10"
+      query: "SELECT name_common, area FROM data ORDER BY area DESC LIMIT 10"
     },
     {
       name: "Countries by continent",
-      query: "SELECT continents, COUNT(*) as count FROM countries GROUP BY continents"
+      query: "SELECT continents, COUNT(*) as count FROM data GROUP BY continents"
     },
     {
       name: "Most populous countries",
-      query: "SELECT name, population FROM countries ORDER BY population DESC LIMIT 20"
+      query: "SELECT name_common, population FROM data ORDER BY population DESC LIMIT 20"
+    },
+    {
+      name: "Countries in Europe",
+      query: "SELECT name_common, capital FROM data WHERE continents LIKE '%Europe%'"
+    },
+    {
+      name: "Countries with area > 1M km²",
+      query: "SELECT name_common, area FROM data WHERE area > 1000000 ORDER BY area DESC"
+    },
+    {
+      name: "Countries by capital city",
+      query: "SELECT name_common, capital FROM data WHERE capital IS NOT NULL ORDER BY name_common"
     }
   ],
   crypto: [
